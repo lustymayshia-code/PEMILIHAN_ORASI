@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KEPENGURUSAN PKS PERIODE 2026/2027</title>
+
+<style>
+:root{
+    --navy:#001f3f;
+    --blue:#0074D9;
+    --light-blue:#7FDBFF;
+    --white:#fff;
+}
+
+/* BODY */
+body{
+    margin:0;
+    padding:20px;
+    font-family:'Segoe UI',Tahoma,Verdana,sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    position:relative;
+}
+
+/* BACKGROUND */
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:url("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwhIxXOHruPYfsCMwXP_i95oezTti80LDVwdJ2HI7-tnp6veqZPztsrKSBvZiagVINHutfdo6i7c14G5bSNRerRwYy9EgOG8Tojj8uYS1BCREr5s5YIFPNdsVmoXUx2FMYvQ6uPhk_n1MuhICV4-ELq1Zk_OQ9FpGEEcd8wgkkjQA1nArHb2Iwqof0tuE/s1600/1000417367.png")
+    center/cover no-repeat;
+    z-index:-2;
+}
+body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(0,31,63,.75);
+    z-index:-1;
+}
+
+/* TITLE */
+h1{
+    color:blue;
+    text-align:center;
+    margin-bottom:40px;
+    letter-spacing:2px;
+    cursor:pointer;
+    user-select:none;
+}
+
+/* CONTAINER */
+.container{
+    width:100%;
+    max-width:1200px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:20px;
+}
+
+/* CARD */
+.card{
+    background:white;
+    border-radius:14px;
+    padding:20px;
+    text-align:center;
+    box-shadow:0 6px 20px rgba(0,0,0,.12);
+    border-top:6px solid var(--navy);
+    transition:transform .5s ease, opacity .4s ease;
+    cursor:pointer;
+}
+
+.position{
+    background:var(--light-blue);
+    color:var(--navy);
+    padding:6px 14px;
+    border-radius:20px;
+    font-size:.85rem;
+    font-weight:bold;
+    margin-bottom:15px;
+}
+
+.photo{
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid var(--light-blue);
+}
+
+.order{color:var(--blue);font-weight:bold;}
+.name{font-size:1. yg4rem;font-weight:bold;color:var(--navy);}
+.votes{font-size:2.6rem;font-weight:bold;color:var(--navy);}
+
+.controls{
+    display:flex;
+    justify-content:center;
+    gap:18px;
+}
+
+button{
+    width:45px;
+    height:45px;
+    border-radius:50%;
+    border:none;
+    font-size:1.6rem;
+    color:white;
+    cursor:pointer;
+}
+.minus{background:#ff4136;}
+.plus{background:#2ecc40;}
+
+button.disabled{
+    background:#aaa !important;
+    cursor:not-allowed;
+    opacity:.6;
+}
+
+/* BLUR ONLY MAIN CARDS */
+.blur{
+    filter:blur(4px) brightness(.7);
+}
+
+/* POPUP */
+.popup{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:10;
+}
+.popup .card{
+    max-width:420px;
+    width:90%;
+    transform:scale(1.1);
+}
+</style>
+</head>
+
+<body>
+
+<h1 id="title">KEPENGURUSAN PKS PERIODE 2026/2027</h1>
+<div class="container" id="container"></div>
+<div class="popup" id="popup"></div>
+
+<script>
+const STORAGE_KEY="pks_voting_data";
+const positions=[
+ "KETUA PKS",
+ "WAKIL KETUA 1 PKS",
+ "WAKIL KETUA 2 PKS",
+ "SEKERTARIS PKS",
+ "BENDAHARA PKS"
+];
+
+let isSorted=false;
+let votingEnded=false;
+
+let candidates=[
+ {id:1,name:"NI Kadek Trisnawati",votes:0,order:1,photo:"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgia6kEIFwoNZsV_AujYSOJN8RsFZbUNhS6aTNaX2Ij3sX0wNa6a7gZ1w-fumYsm_fgV3RucYQ-RD9qKeVtyk_MN7EkM5rLcXuy2HDY6WzdF_3RpWj7CN1RZ0jUNw9jtsgZA-qL8EPriHqzV3NikY74V-8tJde1nwsexU2Nc0P1WdvX07Eud9NWWLZ-STA/s320/IMG20260108094126.jpg"},
+ {id:2,name:"NI Luh Oktavi Yanti",votes:0,order:2,photo:"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjSqJSEiJnd-pVyeWevwZZa-aFxgwMp7C1aHN4gJg3_lm9WSWKa2-_XsHigNykhh5x-2CuL_hg1AGObsIswsNvNifOYVqxzEqEjpMK9ZCc7PZwvpSIoQk_j0O7fuxKcgxQdHVUs-qBpdyFb1sDWLG0D-MMM_VfSYnpQjjrR4d9CJmRLQWhzV2txOZwvGj8/s1600/1000417348.jpg"},
+ {id:3,name:"I KOMANG ARYA WIGUNA",votes:0,order:3,photo:"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZ6wF-nBIwHLYFZiwcluqr18SjMVgju2rlxzr3cZPFJPwMCKCZOT8SthEdKlq1TQoZ9L13eYEVdY4g4tmGP-L-mPL2Irk2i5njontfq9ox5RdtGbxBBRr-8VFJgj3N7neyvkEQqpg0PaZmuFEJ0nliAIoy9ybHJEfFUoOpDIyzdeIfkhpd_o-QBjR5eX4/s1600/1000417349.jpg"},
+ {id:4,name:"NI PUTU MAYSHIA LUSTY",votes:0,order:4,photo:"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjxzqFgNP1pf5Xg7XHm1WvgSxMJBxUxwTZTrfrZLcAij9epwUXPGlBOFAwiAbLhmtNf-5EYpncWpoRQM8wqQK9X-xzoo4oeJXJzZl78KQAIHrpOK15snI-NHOmJjLhi0fxqPBK6wU3juQ-O33CU2KvLurmPdWRtPcGGmM3lkQhPyZOHYrJUO0TfEIrReXo/s1600/1000417350.jpg"},
+ {id:5,name:"I KOMANG DARMA",votes:0,order:5,photo:"https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgqw3FXgRXNiyvxl9d2G-J75_h_FzIfkzxPbdvUIql-aVEUISJNvOp7AUaOlBxm2dI6MaEzDNP-Ml5a_pK1KavU4fjwZx-vT-CWuAhXmpWprSYuxgSS9iZ9JzQLuDB3NvW3zUvkKNfBpWrj51f3hMO-Q5EoGpPn1hqOSywAUWsOx_WH9R3BlZhcIEAmoAM/s1600/1000417347.jpg"}
+];
+
+function updateUI(){
+ const cont=document.getElementById("container");
+ cont.innerHTML="";
+
+ const unique=[...new Set(candidates.map(c=>c.votes))].filter(v=>v>0).sort((a,b)=>b-a);
+ const map={};
+ unique.forEach((v,i)=>map[v]=positions[i]||"-");
+
+ let list=[...candidates];
+ if(isSorted) list.sort((a,b)=>b.votes-a.votes||a.order-b.order);
+
+ list.forEach(c=>{
+  const card=document.createElement("div");
+  card.className="card";
+  card.innerHTML=`
+   <div class="position">${map[c.votes]||"-"}</div>
+   <img class="photo" src="${c.photo}">
+   <div class="order">No. Urut ${c.order}</div>
+   <div class="name">${c.name}</div>
+   <div class="votes">${c.votes}</div>
+   <div class="controls">
+     <button class="minus ${votingEnded?'disabled':''}" onclick="vote(${c.id},-1)">−</button>
+     <button class="plus ${votingEnded?'disabled':''}" onclick="vote(${c.id},1)">+</button>
+   </div>`;
+  card.onclick=()=>showPopup(c,map[c.votes]||"-");
+  cont.appendChild(card);
+ });
+}
+
+function vote(id,val){
+ if(votingEnded) return;
+ const c=candidates.find(x=>x.id===id);
+ c.votes=Math.max(0,c.votes+val);
+ updateUI();
+}
+
+function showPopup(c,pos){
+ if(!votingEnded) return;
+ const popup=document.getElementById("popup");
+ popup.innerHTML=`
+  <div class="card">
+   <div class="name">${c.name}</div>
+   <p>
+    Berdasarkan hasil pemilihan kepengurusan PKS SMA Negeri 2 Amlapura,
+    maka dengan ini ditetapkan bahwa <b>${c.name}</b> terpilih sebagai
+    <b>${pos}</b> dengan perolehan suara sebanyak <b>${c.votes}</b> suara.
+   </p>
+  </div>`;
+ popup.style.display="flex";
+
+ document.querySelectorAll("#container .card")
+   .forEach(x=>x.classList.add("blur"));
+}
+
+document.getElementById("popup").onclick=()=>{
+ document.getElementById("popup").style.display="none";
+ document.querySelectorAll("#container .card")
+   .forEach(x=>x.classList.remove("blur"));
+};
+
+document.getElementById("title").onclick=()=>{
+ votingEnded=true;
+ isSorted=true;
+ updateUI();
+};
+
+updateUI();
+</script>
+
+</body>
+  </html>
